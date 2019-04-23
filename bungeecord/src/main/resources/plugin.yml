@@ -1,3 +1,3 @@
-name: Sentry Minecraft
+name: SentryMinecraft
 version: ${project.version}
 main: me.theminecoder.minecraft.sentry.SentryMinecraftBungeecord
