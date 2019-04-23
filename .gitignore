@@ -1,0 +1,8 @@
+*/.idea
+*/target
+*/*.iml
+*/*-pom.xml
+/.idea
+/target
+*.iml
+*-pom.xml

@@ -1,0 +1,4 @@
+name: Sentry Minecraft
+version: ${project.version}
+main: me.theminecoder.minecraft.sentry.SentryMinecraftSpigot
+api-version: 1.13
