@@ -39,8 +39,10 @@ public class SentryMinecraft {
         }
     }
 
-    public static void addAPIClass(Class clazz) {
-        ForwardingSentryClient.addAPIClass(clazz);
+    public static void addAPIClass(Class... classes) {
+        for (Class clazz : classes) {
+            ForwardingSentryClient.addAPIClass(clazz);
+        }
     }
 
     public static void sendIfActive(Throwable e) {
