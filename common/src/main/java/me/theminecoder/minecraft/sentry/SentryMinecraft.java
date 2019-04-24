@@ -14,13 +14,13 @@ public class SentryMinecraft {
 
     public static void init(ClassLoader loader, String dsn, SentryConfigurationOptions options) {
         if (options.getEnvironment() != null && !dsn.contains("environment")) {
-            dsn += (dsn.contains("?") ? "&" : "?") + "environment=" + options.getRelease();
+            dsn += (dsn.contains("?") ? "&" : "?") + "environment=" + options.getEnvironment();
         }
         if (options.getRelease() != null && !dsn.contains("release")) {
             dsn += (dsn.contains("?") ? "&" : "?") + "release=" + options.getRelease();
         }
-        if (options.getRelease() != null && !dsn.contains("servername")) {
-            dsn += (dsn.contains("?") ? "&" : "?") + "servername=" + options.getRelease();
+        if (options.getServerName() != null && !dsn.contains("servername")) {
+            dsn += (dsn.contains("?") ? "&" : "?") + "servername=" + options.getServerName();
         }
 
         if (!dsn.contains("uncaught.handler.enabled")) {
