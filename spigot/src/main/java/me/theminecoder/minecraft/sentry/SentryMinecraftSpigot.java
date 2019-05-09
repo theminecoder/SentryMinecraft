@@ -2,7 +2,9 @@ package me.theminecoder.minecraft.sentry;
 
 import me.theminecoder.minecraft.sentry.deletgate.DelegateCommandMap;
 import me.theminecoder.minecraft.sentry.deletgate.DelegatePluginManager;
+import org.apache.commons.lang.UnhandledException;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandException;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -40,7 +42,7 @@ public final class SentryMinecraftSpigot extends JavaPlugin {
                         modifierField.setAccessible(true);
                         modifierField.set(commandMapField, commandMapField.getModifiers() & ~Modifier.FINAL);
                     }
-                    commandMapField.set(Bukkit.getServer(), new DelegateCommandMap((SimpleCommandMap) commandMapField.get(Bukkit.getServer()), SentryMinecraft::sendIfActive));
+                    commandMapField.set(Bukkit.getServer(), new DelegateCommandMap((SimpleCommandMap) commandMapField.get(Bukkit.getServer()), this::handleException));
                 } catch (ReflectiveOperationException e) {
                     this.getLogger().severe("Could not install proxy command map! Auto-handling of command exceptions will not work!");
                     e.printStackTrace();
@@ -54,7 +56,7 @@ public final class SentryMinecraftSpigot extends JavaPlugin {
                         modifierField.setAccessible(true);
                         modifierField.set(pluginManagerField, pluginManagerField.getModifiers() & ~Modifier.FINAL);
                     }
-                    pluginManagerField.set(Bukkit.getServer(), new DelegatePluginManager(Bukkit.getPluginManager(), SentryMinecraft::sendIfActive));
+                    pluginManagerField.set(Bukkit.getServer(), new DelegatePluginManager(Bukkit.getPluginManager(), this::handleException));
                 } catch (ReflectiveOperationException e) {
                     this.getLogger().severe("Could not install proxy plugin manager! Auto-handling of event exceptions will not work!");
                     e.printStackTrace();
@@ -72,26 +74,33 @@ public final class SentryMinecraftSpigot extends JavaPlugin {
                 this.getServer().getPluginManager().registerEvents(new Listener() {
                     @EventHandler
                     public void onServerException(com.destroystokyo.paper.event.server.ServerExceptionEvent event) {
-                        Throwable e = event.getException().getCause();
-                        if (e.getCause() != null) {
-                            e = e.getCause();
-                        }
-                        SentryMinecraft.sendIfActive(e);
+                        handleException(event.getException().getCause());
                     }
                 }, this);
             } else if (hasPaperEvents_18) {
                 this.getServer().getPluginManager().registerEvents(new Listener() {
                     @EventHandler
                     public void onServerException(org.github.paperspigot.event.ServerExceptionEvent event) {
-                        Throwable e = event.getException().getCause();
-                        if (e.getCause() != null) {
-                            e = e.getCause();
-                        }
-                        SentryMinecraft.sendIfActive(e);
+                        handleException(event.getException().getCause());
                     }
                 }, this);
             }
         }
+    }
+
+    private void handleException(Throwable cause) {
+        Throwable e = cause;
+        if (e.getCause() != null) { // Paper wraps the actual exception
+            e = e.getCause();
+        }
+        if (e instanceof UnhandledException && e.getCause() != null) {
+            e = e.getCause();
+        }
+        if (e instanceof CommandException && e.getCause() != null) {
+            e = e.getCause();
+        }
+        Throwable finalE = e;
+        getServer().getScheduler().runTaskAsynchronously(SentryMinecraftSpigot.this, () -> SentryMinecraft.sendIfActive(finalE));
     }
 
 }
