@@ -31,19 +31,22 @@ class ForwardingSentryClient extends SentryClient {
     private SentryClient determineClient(SentryStackTraceElement[] stackTrace) {
         if (stackTrace == null) return defaultClient;
 
+        SentryClient apiClient = null;
         SentryClient client = null;
 
         for (SentryStackTraceElement element : stackTrace) {
-            if (apiClasses.contains(element.getModule())) continue;
+            boolean apiClass = apiClasses.contains(element.getModule());
             try {
                 ClassLoader loader = Class.forName(element.getModule()).getClassLoader();
-                client = getClient(loader);
+                if(apiClass) apiClient = getClient(loader);
+                else client = getClient(loader);
             } catch (Exception e) {
                 e.printStackTrace();
             }
             if (client != null) break;
         }
 
+        if(client == null) client = apiClient;
         return client != null ? client : defaultClient;
     }
 
