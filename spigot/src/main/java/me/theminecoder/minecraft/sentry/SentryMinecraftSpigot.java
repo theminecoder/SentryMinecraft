@@ -10,8 +10,12 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Properties;
 
 public final class SentryMinecraftSpigot extends JavaPlugin {
 
@@ -64,6 +68,20 @@ public final class SentryMinecraftSpigot extends JavaPlugin {
 
                 this.getLogger().severe("Due to api issues, we are unable to install a proxy scheduler into the server. Auto-handling of scheduler exceptions will not work!");
             }
+        }
+
+        if(getConfig().getString("default-dsn").trim().length()>0) {
+            //I really don't get why they removed this....
+            Properties properties = new Properties();
+            try(FileReader reader = new FileReader(new File("server.properties"))) {
+                properties.load(reader);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            SentryMinecraft.init(ClassLoader.getSystemClassLoader(), getConfig().getString("default-dsn"), SentryConfigurationOptions.Builder.create()
+                    .withServerName(properties.getProperty("server-id", "Unknown Server"))
+                    .asDefaultClient()
+                    .build());
         }
     }
 

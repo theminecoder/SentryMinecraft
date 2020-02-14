@@ -1,1 +1,2 @@
+default-dsn: ""
 use-builtin-handlers: true
