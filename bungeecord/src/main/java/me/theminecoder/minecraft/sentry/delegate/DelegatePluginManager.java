@@ -8,10 +8,7 @@ import net.md_5.bungee.api.plugin.*;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -70,24 +67,19 @@ public class DelegatePluginManager extends PluginManager {
 
     @Override
     public boolean dispatchCommand(CommandSender sender, String commandLine, List<String> tabResults) {
-        String[] split = argsSplit.split(commandLine, -1);
+        String[] split = commandLine.split(" ", -1);
         // Check for chat that only contains " "
-        if (split.length == 0) {
+        if (split.length == 0 || split[0].isEmpty()) {
             return false;
         }
 
-        String commandName = split[0].toLowerCase();
-        if (sender instanceof ProxiedPlayer && proxy.getDisabledCommands().contains(commandName)) {
-            return false;
-        }
-        Command command = commandMap.get(commandName);
+        Command command = this.getCommandIfEnabled(split[0], sender);
         if (command == null) {
             return false;
         }
 
-        String permission = command.getPermission();
-        if (permission != null && !permission.isEmpty() && !sender.hasPermission(permission)) {
-            if (!(command instanceof TabExecutor) || tabResults == null) {
+        if (!command.hasPermission(sender)) {
+            if (tabResults == null) {
                 sender.sendMessage(proxy.getTranslation("no_permission"));
             }
             return true;
@@ -118,6 +110,17 @@ public class DelegatePluginManager extends PluginManager {
 
     public List<String> tabCompleteCommand(CommandSender sender, String commandLine) {
         return delegate.tabCompleteCommand(sender, commandLine);
+    }
+
+    private Command getCommandIfEnabled(String commandName, CommandSender sender) {
+        String commandLower = commandName.toLowerCase(Locale.ROOT);
+
+        // Check if command is disabled when a player sent the command
+        if ((sender instanceof ProxiedPlayer) && proxy.getDisabledCommands().contains(commandLower)) {
+            return null;
+        }
+
+        return commandMap.get(commandLower);
     }
 
     @Override
