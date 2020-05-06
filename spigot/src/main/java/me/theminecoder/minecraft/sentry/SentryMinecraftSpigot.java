@@ -70,16 +70,16 @@ public final class SentryMinecraftSpigot extends JavaPlugin {
             }
         }
 
-        if(getConfig().getString("default-dsn").trim().length()>0) {
+        if (getConfig().getString("default-dsn", "").trim().length() > 0) {
             //I really don't get why they removed this....
             Properties properties = new Properties();
-            try(FileReader reader = new FileReader(new File("server.properties"))) {
+            try (FileReader reader = new FileReader(new File("server.properties"))) {
                 properties.load(reader);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             SentryMinecraft.init(ClassLoader.getSystemClassLoader(), getConfig().getString("default-dsn"), SentryConfigurationOptions.Builder.create()
-                    .withServerName(properties.getProperty("server-id", "Unknown Server"))
+                    .withServerName(properties.getProperty("server-id", getConfig().getString("server-name", "Unknown Server")).replace(" ", "+"))
                     .asDefaultClient()
                     .build());
         }
